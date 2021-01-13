@@ -1,29 +1,30 @@
 package com.kuzmin.hello.config;
 
-import com.kuzmin.hello.domain.User;
-import com.kuzmin.hello.service.InMemoryUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 
-import java.util.List;
+import javax.sql.DataSource;
 
 @Configuration
 public class UserManagementConfig {
     @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails u = new User("alex", passwordEncoder().encode("12345"), "read");
-        List<UserDetails> users = List.of(u);
-        return new InMemoryUserDetailsService(users);
+    public UserDetailsService userDetailsService(DataSource dataSource) {
+        String usersByUsernameQuery =
+                "select username, password, enabled from users where username = ?";
+        String authsByUserQuery =
+                "select username, authority from authorities where username = ?";
+        var userDetailsManager = new JdbcUserDetailsManager(dataSource);
+        userDetailsManager.setUsersByUsernameQuery(usersByUsernameQuery);
+        userDetailsManager.setAuthoritiesByUsernameQuery(authsByUserQuery);
+        return userDetailsManager;
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new Pbkdf2PasswordEncoder();
+        return NoOpPasswordEncoder.getInstance();
     }
 }
