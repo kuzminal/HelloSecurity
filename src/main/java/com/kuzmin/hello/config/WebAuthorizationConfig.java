@@ -6,10 +6,13 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 
 @Configuration
 public class WebAuthorizationConfig extends WebSecurityConfigurerAdapter {
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.httpBasic();
         http.authorizeRequests()
-                .anyRequest().authenticated();
+                .mvcMatchers("/hello").hasRole("ADMIN")
+                .mvcMatchers("/ciao").hasRole("MANAGER")
+                .anyRequest().permitAll();
     }
 }
